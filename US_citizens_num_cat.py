@@ -53,6 +53,8 @@ class PlotWindow:
         self.grid_check = ttk.Checkbutton(self.nav_frame, text="Show Grid", variable=self.show_grid)
         self.grid_check.pack(pady=5)
 
+        self.show_grid()
+
         # Button to open message box
         self.info_button = ttk.Button(self.nav_frame, text="Info", command=self.show_message)
         self.info_button.pack(pady=5)
