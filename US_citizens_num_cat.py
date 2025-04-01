@@ -160,6 +160,16 @@ class MessageBoxHandler:
         info_text = f"Dataset Info:\nRows: {self.df.shape[0]}\nColumns: {self.df.shape[1]}\nMissing Values: {self.df.isnull().sum().sum()}"
         messagebox.showinfo("Dataset Information", info_text)
 
+def toggle_grid(self):
+        # Checkbutton durumuna göre grid gösterilip gizlenecek
+        self.show_grid()
+
+def show_grid(self):
+        # Eğer grid gösterilsin istiyorsa
+        if self.show_grid_var.get():
+            print("Grid is visible.")  # Burada grid'in gerçekten görünüp görünmediğini kontrol edebilirsiniz
+        else:
+            print("Grid is hidden.")  # Grid gizlendiğinde yapılacak işlemler
 
 if __name__ == "__main__":
     root = tk.Tk()
