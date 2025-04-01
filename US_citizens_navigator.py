@@ -19,7 +19,13 @@ class PlotWindow:
         self.root = root
         self.root.title("Data Visualization App")
         self.df = pd.read_csv(csv_file)
+        self.df["occupation"].replace("?", "Unknown", inplace=True)
         self.df["education_level"] = self.df["education"].apply(mapping_education)
+
+        self.soft_background = "#e3f2fd"  # Bebek mavisi
+        self.soft_button = "#a0c4ff"  # Soft mavi
+        self.soft_label = "#1565c0"  # Koyu mavi
+        self.font = ("Arial", 12, "bold")
         
         self.create_layout()
 
@@ -27,9 +33,11 @@ class PlotWindow:
         self.pane = tk.PanedWindow(self.root, orient=tk.HORIZONTAL)
         self.pane.pack(fill=tk.BOTH, expand=True)
 
-        self.nav_frame = tk.Frame(self.pane, width=250, bg="lightgray")
+        # Navigator panel
+        self.nav_frame = tk.Frame(self.pane, width=250, bg=self.soft_background)
         self.pane.add(self.nav_frame)
 
+        # Visualization frame
         self.vis_frame = tk.Frame(self.pane, width=600, bg="white")
         self.pane.add(self.vis_frame)
 
@@ -38,38 +46,48 @@ class PlotWindow:
     def create_widgets(self):
         self.plot_types = ["Bar", "Pie", "Histogram", "Line", "Box", "Scatter"]
         self.selected_plot = tk.StringVar(value=self.plot_types[0])
-        ttk.Label(self.nav_frame, text="Select Plot Type:").pack(pady=5)
-        self.plot_dropdown = ttk.Combobox(self.nav_frame, textvariable=self.selected_plot, values=self.plot_types)
+        
+        # Title Label with soft blue color and larger font
+        ttk.Label(self.nav_frame, text="Select Plot Type:", background=self.soft_background, foreground=self.soft_label, font=self.font).pack(pady=5)
+        
+        # Dropdown for plot types
+        self.plot_dropdown = ttk.Combobox(self.nav_frame, textvariable=self.selected_plot, values=self.plot_types, font=self.font)
         self.plot_dropdown.pack(pady=5)
+        
         self.plot_dropdown.bind("<<ComboboxSelected>>", self.update_column_dropdown)
 
+        # Select First Column
         self.all_columns = self.df.columns.tolist()
-        self.all_columns_with_dash = self.all_columns + ["---"]  # Add "---" for no second column
         self.selected_col1 = tk.StringVar(value=self.all_columns[0])
-        ttk.Label(self.nav_frame, text="Select First Column:").pack(pady=5)
-        self.col1_dropdown = ttk.Combobox(self.nav_frame, textvariable=self.selected_col1, values=self.all_columns)
+        ttk.Label(self.nav_frame, text="Select First Column:", background=self.soft_background, foreground=self.soft_label, font=self.font).pack(pady=5)
+        
+        self.col1_dropdown = ttk.Combobox(self.nav_frame, textvariable=self.selected_col1, values=self.all_columns, font=self.font)
         self.col1_dropdown.pack(pady=5)
 
-        self.selected_col2 = tk.StringVar(value=self.all_columns_with_dash[0])
-        ttk.Label(self.nav_frame, text="Select Second Column:").pack(pady=5)
-        self.col2_dropdown = ttk.Combobox(self.nav_frame, textvariable=self.selected_col2, values=self.all_columns_with_dash)
+        # Select Second Column
+        self.selected_col2 = tk.StringVar(value=self.all_columns[0])
+        ttk.Label(self.nav_frame, text="Select Second Column:", background=self.soft_background, foreground=self.soft_label, font=self.font).pack(pady=5)
+        
+        self.col2_dropdown = ttk.Combobox(self.nav_frame, textvariable=self.selected_col2, values=self.all_columns, font=self.font)
         self.col2_dropdown.pack(pady=5)
 
-        # Button to plot
-        self.plot_button = ttk.Button(self.nav_frame, text="Plot", command=self.plot_graph)
+        # Plot Button with soft blue color and hover effect
+        ttk.Label(self.nav_frame, text="Select Plot Type:", style="TLabel").pack(pady=5)
+
+        self.plot_button = ttk.Button(self.nav_frame, text="Plot", style="Soft.TButton", command=self.plot_graph)
         self.plot_button.pack(pady=5)
 
-        # Checkbutton
+        # Grid Check Button
         self.show_grid = tk.BooleanVar()
-        self.grid_check = ttk.Checkbutton(self.nav_frame, text="Show Grid", variable=self.show_grid)
+        self.grid_check = ttk.Checkbutton(self.nav_frame, text="Show Grid", variable=self.show_grid, font=self.font)
         self.grid_check.pack(pady=5)
 
-        # Button to open message box
-        self.info_button = ttk.Button(self.nav_frame, text="Info", command=self.show_message)
+        # Info Button
+        self.info_button = ttk.Button(self.nav_frame, style="Soft.TButton", text="Info", command=self.show_message)
         self.info_button.pack(pady=5)
 
-        # Quit button
-        self.quit_button = ttk.Button(self.nav_frame, text="Quit", command=self.root.quit)
+        # Quit Button
+        self.quit_button = ttk.Button(self.nav_frame, style="Soft.TButton", text="Quit", command=self.root.quit)
         self.quit_button.pack(pady=5)
 
     def update_column_dropdown(self, event=None):
@@ -130,6 +148,21 @@ class PlotWindow:
     def show_message(self):
         MessageBoxHandler(self.df)
 
+    def setup_styles():
+        style = ttk.Style()
+        style.configure("TLabel", font=("Arial", 12, "bold"), foreground="#1565c0", background="#e3f2fd")
+    
+        style.configure("Soft.TButton",
+                    padding=6,
+                    relief="flat",
+                    background="#a0c4ff",  # Soft mavi
+                    font=("Arial", 12, "bold"))
+
+        # Add hover effect for buttons
+        style.map("Soft.TButton",
+              foreground=[("active", "#ffffff")],
+              background=[("active", "#6a9aef")])  # Slightly darker blue when hovered
+
 
 class PlotHandler:
     def __init__(self, df, plot_type, col1, col2):
@@ -139,6 +172,9 @@ class PlotHandler:
         self.col2 = col2
 
     def generate_plot(self):
+        plot_title = f"{self.plot_type} plot of {self.col1} and {self.col2}".title()
+        title_style = dict(font=dict(size=20, color="blue", family="Arial", weight="bold"))
+
         if self.plot_type == "bar":
             if self.col2 == "---":  # If no second column is selected
                 count_df = self.df[self.col1].value_counts().reset_index(name="Count")
@@ -146,6 +182,8 @@ class PlotHandler:
             else:
                 count_df = self.df.groupby([self.col1, self.col2]).size().reset_index(name="Count")
                 fig = px.bar(count_df, x=self.col1, y="Count", color=self.col2, barmode="group")
+            fig.update_layout(title=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
+
         elif self.plot_type == "pie":
             if self.col2 == "---":  # If no second column is selected
                 count_df = self.df[self.col1].value_counts().reset_index(name="Count")
@@ -153,14 +191,24 @@ class PlotHandler:
             else:
                 count_df = self.df.groupby([self.col1, self.col2]).size().reset_index(name="Count")
                 fig = px.pie(count_df, names=self.col1, color=self.col2, values="Count")
+            fig.update_layout(title=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
+
         elif self.plot_type == "histogram":
             fig = px.histogram(self.df, x=self.col1, color=self.col2 if self.col2 != "---" else None)
+            fig.update_layout(title=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
+
         elif self.plot_type == "line":
             fig = px.line(self.df, x=self.col1, y=self.col2)
+            fig.update_layout(title=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
+
         elif self.plot_type == "box":
             fig = px.box(self.df, x=self.col1, y=self.col2)
+            fig.update_layout(title=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
+
         elif self.plot_type == "scatter":
             fig = px.scatter(self.df, x=self.col1, y=self.col2)
+            fig.update_layout(title=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
+
         else:
             messagebox.showerror("Error", "Invalid plot type selected!")
             return
@@ -181,5 +229,6 @@ class MessageBoxHandler:
 
 if __name__ == "__main__":
     root = tk.Tk()
+    setup_styles()
     app = PlotWindow(root, "adult_eda.csv")
     root.mainloop()
