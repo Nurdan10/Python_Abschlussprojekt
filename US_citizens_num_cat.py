@@ -62,9 +62,27 @@ class PlotWindow:
         col1 = self.selected_col1.get()
         col2 = self.selected_col2.get()
 
-        if plot_type in ["Bar", "Pie"] and self.df[col1].nunique() > 20:
-            messagebox.showwarning("Warning", f"Too many unique values ({self.df[col1].nunique()}) for {plot_type} chart!")
+        if plot_type == "Bar" and not (self.df[col1].dtype == 'object' and self.df[col2].dtype == 'object'):
+            messagebox.showwarning("Warning", "For Bar charts, both columns should be categorical!")
             return
+        elif plot_type == "Pie" and not (self.df[col1].dtype == 'object'):
+            messagebox.showwarning("Warning", "For Pie charts, the first column should be categorical!")
+            return
+        elif plot_type == "Histogram" and not (self.df[col1].dtype in ['float64', 'int64']):
+            messagebox.showwarning("Warning", "For Histogram, the first column should be numerical!")
+            return
+        elif plot_type == "Line" and not (self.df[col1].dtype in ['float64', 'int64'] and self.df[col2].dtype in ['float64', 'int64']):
+            messagebox.showwarning("Warning", "For Line charts, both columns should be numerical!")
+            return
+        elif plot_type == "Scatter" and not (self.df[col1].dtype in ['float64', 'int64'] and self.df[col2].dtype in ['float64', 'int64']):
+            messagebox.showwarning("Warning", "For Scatter plots, both columns should be numerical!")
+            return
+        elif plot_type == "Box" and not (self.df[col2].dtype in ['float64', 'int64']):
+            messagebox.showwarning("Warning", "For Box plots, the second column should be numerical!")
+            return
+
+        if self.df[col1].nunique() > 50 and plot_type in ["Bar", "Pie"]:
+            messagebox.showwarning("Warning", "The selected plot type may not be suitable due to too many unique values!")
 
         if plot_type == "Bar":
             self.plot_handler = PlotHandler(self.df, "bar", col1, col2)
