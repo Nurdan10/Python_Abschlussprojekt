@@ -49,7 +49,7 @@ class PlotWindow:
         self.plot_button.pack(pady=5)
 
         # Checkbutton
-        self.show_grid = tk.BooleanVar()
+        self.show_grid = tk.BooleanVar(value=True)
         self.grid_check = ttk.Checkbutton(self.nav_frame, text="Show Grid", variable=self.show_grid)
         self.grid_check.pack(pady=5)
 
