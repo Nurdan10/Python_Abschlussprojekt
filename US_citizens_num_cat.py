@@ -45,8 +45,6 @@ class PlotWindow:
         self.plot_dropdown.bind("<<ComboboxSelected>>", self.update_column_dropdown)
 
         self.all_columns = self.df.columns.tolist()
-        self.all_columns.append("education_level")
-
         self.selected_col1 = tk.StringVar(value=self.all_columns[0])
         ttk.Label(self.nav_frame, text="Select First Column:").pack(pady=5)
         self.col1_dropdown = ttk.Combobox(self.nav_frame, textvariable=self.selected_col1, values=self.all_columns)
@@ -141,10 +139,10 @@ class PlotHandler:
         self.col2 = col2
 
     def generate_plot(self):
-        if self.plot_type == "bar":
+        """if self.plot_type == "bar":
             count_df = self.df.groupby([self.col1, self.col2]).size().reset_index(name="Count")
             fig = px.bar(count_df, x=self.col1, y="Count", color=self.col2, barmode="group")
-
+          
         elif self.plot_type == "pie":
             count_df = self.df.groupby([self.col1, self.col2]).size().reset_index(name="Count") if self.col2 else self.df.groupby([self.col1]).size().reset_index(name="Count")
             fig = px.pie(count_df, names=self.col1, values="Count", color=self.col2 if self.col2 else None)
@@ -167,14 +165,19 @@ class PlotHandler:
             return
 
         fig.write_html("plot.html")
-        webbrowser.open("plot.html")
+        webbrowser.open("plot.html")"""
+        # fig = px.bar(self.df, x=self.col1, y="Count", color=self.col2, barmode="group")
 
-        """if self.plot_type == "bar":
+
+        if self.plot_type == "bar":
             count_df = self.df.groupby([self.col1, self.col2]).size().reset_index(name="Count")
             fig = px.bar(count_df, x=self.col1, y="Count", color=self.col2, barmode="group")
+        #elif self.plot_type == "pie":
+            #count_df = self.df.groupby([self.col1]).size().reset_index(name="Count")
+            #fig = px.pie(count_df, names=self.col1, values="Count")
         elif self.plot_type == "pie":
-            count_df = self.df.groupby([self.col1]).size().reset_index(name="Count")
-            fig = px.pie(count_df, names=self.col1, values="Count")
+            count_df = self.df.groupby([self.col1, self.col2]).size().reset_index(name="Count")
+            fig = px.pie(count_df, names=self.col1, color=self.col2, values="Count")
         elif self.plot_type == "histogram":
             fig = px.histogram(self.df, x=self.col1)
         elif self.plot_type == "line":
@@ -188,7 +191,7 @@ class PlotHandler:
             return
 
         fig.write_html("plot.html")
-        webbrowser.open("plot.html")"""
+        webbrowser.open("plot.html")
 
 class MessageBoxHandler:
     def __init__(self, df):
