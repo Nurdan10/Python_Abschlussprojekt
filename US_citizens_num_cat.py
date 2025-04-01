@@ -44,8 +44,22 @@ class PlotWindow:
         self.col2_dropdown = ttk.Combobox(self.nav_frame, textvariable=self.selected_col2, values=self.all_columns)
         self.col2_dropdown.pack(pady=5)
 
+        # Button to plot
         self.plot_button = ttk.Button(self.nav_frame, text="Plot", command=self.plot_graph)
         self.plot_button.pack(pady=5)
+
+        # Checkbutton
+        self.show_grid = tk.BooleanVar()
+        self.grid_check = ttk.Checkbutton(self.nav_frame, text="Show Grid", variable=self.show_grid)
+        self.grid_check.pack(pady=5)
+
+        # Button to open message box
+        self.info_button = ttk.Button(self.nav_frame, text="Info", command=self.show_message)
+        self.info_button.pack(pady=5)
+
+        # Quit button
+        self.quit_button = ttk.Button(self.nav_frame, text="Quit", command=self.root.quit)
+        self.quit_button.pack(pady=5)
 
     def update_column_dropdown(self, event=None):
         plot_type = self.selected_plot.get()
@@ -102,6 +116,9 @@ class PlotWindow:
 
         self.plot_handler.generate_plot()
 
+    def show_message(self):
+        MessageBoxHandler(self.df)
+
 
 class PlotHandler:
     def __init__(self, df, plot_type, col1, col2):
@@ -131,6 +148,15 @@ class PlotHandler:
 
         fig.write_html("plot.html")
         webbrowser.open("plot.html")
+
+class MessageBoxHandler:
+    def __init__(self, df):
+        self.df = df
+        self.show_info()
+
+    def show_info(self):
+        info_text = f"Dataset Info:\nRows: {self.df.shape[0]}\nColumns: {self.df.shape[1]}\nMissing Values: {self.df.isnull().sum().sum()}"
+        messagebox.showinfo("Dataset Information", info_text)
 
 
 if __name__ == "__main__":
