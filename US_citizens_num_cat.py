@@ -5,11 +5,22 @@ import plotly.express as px
 import webbrowser
 
 
+def mapping_education(x):
+    if x in ["Preschool", "1st-4th", "5th-6th", "7th-8th", "9th", "10th", "11th", "12th"]:
+        return "low_level_grade"
+    elif x in ["HS-grad", "Some-college", "Assoc-voc", "Assoc-acdm"]:
+        return "medium_level_grade"
+    elif x in ["Bachelors", "Masters", "Prof-school", "Doctorate"]:
+        return "high_level_grade"
+    return None
+
 class PlotWindow:
     def __init__(self, root, csv_file):
         self.root = root
         self.root.title("Data Visualization App")
         self.df = pd.read_csv(csv_file)
+        self.df["education_level"] = self.df["education"].apply(mapping_education)
+
 
         self.create_layout()
 
@@ -34,6 +45,8 @@ class PlotWindow:
         self.plot_dropdown.bind("<<ComboboxSelected>>", self.update_column_dropdown)
 
         self.all_columns = self.df.columns.tolist()
+        self.all_columns.append("education_level")
+
         self.selected_col1 = tk.StringVar(value=self.all_columns[0])
         ttk.Label(self.nav_frame, text="Select First Column:").pack(pady=5)
         self.col1_dropdown = ttk.Combobox(self.nav_frame, textvariable=self.selected_col1, values=self.all_columns)
@@ -131,6 +144,34 @@ class PlotHandler:
         if self.plot_type == "bar":
             count_df = self.df.groupby([self.col1, self.col2]).size().reset_index(name="Count")
             fig = px.bar(count_df, x=self.col1, y="Count", color=self.col2, barmode="group")
+
+        elif self.plot_type == "pie":
+            count_df = self.df.groupby([self.col1, self.col2]).size().reset_index(name="Count") if self.col2 else self.df.groupby([self.col1]).size().reset_index(name="Count")
+            fig = px.pie(count_df, names=self.col1, values="Count", color=self.col2 if self.col2 else None)
+
+        elif self.plot_type == "histogram":
+            fig = px.histogram(self.df, x=self.col1, color=self.col2)
+
+        elif self.plot_type == "line":
+            grouped_df = self.df.groupby(self.col1, as_index=False)[self.col2].mean()  # X ekseni unique olmalı
+            fig = px.line(grouped_df, x=self.col1, y=self.col2)
+
+        elif self.plot_type == "box":
+            fig = px.box(self.df, x=self.col1, y=self.col2)
+
+        elif self.plot_type == "scatter":
+            fig = px.scatter(self.df, x=self.col1, y=self.col2)
+
+        else:
+            messagebox.showerror("Error", "Invalid plot type selected!")
+            return
+
+        fig.write_html("plot.html")
+        webbrowser.open("plot.html")
+
+        """if self.plot_type == "bar":
+            count_df = self.df.groupby([self.col1, self.col2]).size().reset_index(name="Count")
+            fig = px.bar(count_df, x=self.col1, y="Count", color=self.col2, barmode="group")
         elif self.plot_type == "pie":
             count_df = self.df.groupby([self.col1]).size().reset_index(name="Count")
             fig = px.pie(count_df, names=self.col1, values="Count")
@@ -147,7 +188,7 @@ class PlotHandler:
             return
 
         fig.write_html("plot.html")
-        webbrowser.open("plot.html")
+        webbrowser.open("plot.html")"""
 
 class MessageBoxHandler:
     def __init__(self, df):

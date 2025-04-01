@@ -89,25 +89,50 @@ class PlotWindow:
         if plot_type == "Bar" and not (self.df[col1].dtype == 'object' and self.df[col2].dtype == 'object'):
             messagebox.showwarning("Warning", "For Bar charts, both columns should be categorical!")
             return
-        elif plot_type == "Pie" and not (self.df[col1].dtype == 'object'):
+            
+    # Pie Plot: Sadece birinci sütunun kategorik olması yeterli
+        elif plot_type == "Pie" and self.df[col1].dtype != 'object':
             messagebox.showwarning("Warning", "For Pie charts, the first column should be categorical!")
             return
-        elif plot_type == "Histogram" and not (self.df[col1].dtype in ['float64', 'int64']):
+
+    # Histogram: Sadece birinci sütun sayısal olmalı
+        elif plot_type == "Histogram" and self.df[col1].dtype not in ['float64', 'int64']:
             messagebox.showwarning("Warning", "For Histogram, the first column should be numerical!")
             return
-        elif plot_type == "Line" and not (self.df[col1].dtype in ['float64', 'int64'] and self.df[col2].dtype in ['float64', 'int64']):
-            messagebox.showwarning("Warning", "For Line charts, the first column should be numerical!")
+
+    # Line Plot: Hem birinci hem ikinci sütun sayısal olmalı
+        elif plot_type == "Line" and (self.df[col1].dtype not in ['float64', 'int64'] or self.df[col2].dtype not in ['float64', 'int64']):
+            messagebox.showwarning("Warning", "For Line charts, both columns should be numerical!")
+            return
+
+    # Scatter Plot: Hem birinci hem ikinci sütun sayısal olmalı
+        elif plot_type == "Scatter" and (self.df[col1].dtype not in ['float64', 'int64'] or self.df[col2].dtype not in ['float64', 'int64']):
+            messagebox.showwarning("Warning", "For Scatter plots, both columns should be numerical!")
+            return
+
+    # Box Plot: İkinci sütunun sayısal olması gerekiyor
+        elif plot_type == "Box" and self.df[col2].dtype not in ['float64', 'int64']:
+            messagebox.showwarning("Warning", "For Box plots, the second column should be numerical!")
             return
 
         # Plot handling
+        # Eğer Bar veya Pie seçilmişse ve çok fazla unique değer varsa uyarı ver
+        if plot_type in ["Bar", "Pie"] and self.df[col1].nunique() > 50:
+            messagebox.showwarning("Warning", "The selected plot type may not be suitable due to too many unique values!")
+
+    # Grafik çizimi
         if plot_type == "Bar":
             self.plot_handler = PlotHandler(self.df, "bar", col1, col2)
         elif plot_type == "Pie":
             self.plot_handler = PlotHandler(self.df, "pie", col1, col2)
         elif plot_type == "Histogram":
-            self.plot_handler = PlotHandler(self.df, "histogram", col1, col2)
+            self.plot_handler = PlotHandler(self.df, "histogram", col1, None)
         elif plot_type == "Line":
             self.plot_handler = PlotHandler(self.df, "line", col1, col2)
+        elif plot_type == "Box":
+            self.plot_handler = PlotHandler(self.df, "box", col1, col2)
+        elif plot_type == "Scatter":
+            self.plot_handler = PlotHandler(self.df, "scatter", col1, col2)
         else:
             messagebox.showerror("Error", "Invalid plot type selected!")
             return
@@ -162,3 +187,8 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = PlotWindow(root, "adult_eda.csv")  # Use your CSV file here
     root.mainloop()
+
+
+# olmadi show grid dogru calismiyor, her durumda grid ile geliyor grafik. 
+# o yüzden check butonu baska bir islev yapsin, mesela veri kümesini filtreleme isini nasil yapabiliriz? 
+# buraya ekleyecegim kodda baska hic bir degisiklik yapmaksizin sadece o kismi düzenle!!!
