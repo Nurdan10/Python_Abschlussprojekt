@@ -8,6 +8,7 @@ Beschreibung
 In diesem Projekt habe ich eine grafische Benutzeroberfläche (GUI) mit Tkinter erstellt, um das Census Income Dataset zu analysieren. Das Ziel des Projekts ist es, ein System zu entwickeln, das es dem Benutzer ermöglicht, die Einkommensdaten von Einzelpersonen zu visualisieren und zu analysieren, insbesondere im Hinblick darauf, ob eine Person mehr als 50.000 Dollar jährlich verdient oder nicht.
 
 Dataset
+Den verwendeten Datensatz finden Sie hier: https://archive.ics.uci.edu/dataset/2/adult
 Das verwendete Census Income Dataset enthält 48.842 Einträge. Jeder Eintrag enthält Informationen über eine Person, einschließlich ihres Einkommens (ob sie mehr als 50.000 Dollar jährlich verdienen oder nicht), ihrem Alter, Beruf, Bildungsniveau und vielen weiteren demografischen Merkmalen.
 
 Die wichtigsten Merkmale des Datasets sind:

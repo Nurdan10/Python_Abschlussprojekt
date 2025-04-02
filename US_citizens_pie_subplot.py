@@ -1,3 +1,23 @@
+"""
+Dieses Programm ist eine Tkinter-basierte Anwendung zur Visualisierung von CSV-Daten mit Plotly.
+
+Funktionalitäten:
+- Laden einer CSV-Datei über eine Dateiauswahl.
+- Auswahl eines Diagrammtyps (Balken-, Kreis-, Histogramm-, Linien-, Box- und Streudiagramme).
+- Auswahl von Spalten für die Diagrammerstellung.
+- Visualisierung der Daten in einem interaktiven Plotly-Graphen.
+- Speicherung und Anzeige der generierten Diagramme in einem Webbrowser.
+
+Technische Umsetzung:
+- Tkinter für die GUI.
+- Pandas für die CSV-Verarbeitung.
+- Plotly für die Diagrammerstellung.
+- Webbrowser-Modul zur Anzeige von Diagrammen.
+
+Autor: [Dein Name]
+Datum: [Aktuelles Datum]
+"""
+
 import tkinter as tk
 from tkinter import messagebox, ttk
 import pandas as pd
@@ -7,6 +27,7 @@ import plotly.graph_objects as go
 import webbrowser
 
 def mapping_education(x):
+    """Weist jeder Bildungsstufe eine allgemeine Kategorie zu."""
     if x in ["Preschool", "1st-4th", "5th-6th", "7th-8th", "9th", "10th", "11th", "12th"]:
         return "low_level_grade"
     elif x in ["HS-grad", "Some-college", "Assoc-voc", "Assoc-acdm"]:
@@ -16,12 +37,14 @@ def mapping_education(x):
     return None
 
 def setup_styles():
+    """Konfiguriert das visuelle Erscheinungsbild der GUI mit Tkinter Style."""
     style = ttk.Style()
     style.configure("TLabel", font=("Arial", 12, "bold"), foreground="#1565c0", background="#e3f2fd")
     style.configure("Soft.TButton", padding=6, relief="flat", background="#a0c4ff", font=("Arial", 12, "bold"))
     style.map("Soft.TButton", foreground=[("active", "#ffffff")], background=[("active", "#6a9aef")])
 
 class PlotWindow:
+    """Erstellt das Hauptfenster für die Datenvisualisierung."""
     def __init__(self, root, csv_file):
         self.root = root
         self.root.title("Data Visualization App")
@@ -32,18 +55,22 @@ class PlotWindow:
         self.create_layout()
 
     def create_layout(self):
+        """Richtet das GUI-Layout mit Navigations- und Visualisierungsbereich ein."""
         self.pane = tk.PanedWindow(self.root, orient=tk.HORIZONTAL)
         self.pane.pack(fill=tk.BOTH, expand=True)
 
+        # Navigation Frame für Buttons und Optionen
         self.nav_frame = tk.Frame(self.pane, width=250, bg="#e3f2fd")
         self.pane.add(self.nav_frame)
-
+        
+        # Visualisierungsbereich
         self.vis_frame = tk.Frame(self.pane, width=600, bg="white")
         self.pane.add(self.vis_frame)
         
         self.create_widgets()
 
     def create_widgets(self):
+        """Erstellt die Widgets zur Steuerung der Anwendung."""
         self.plot_types = ["Bar", "Pie", "Histogram", "Line", "Box", "Scatter"]
         self.selected_plot = tk.StringVar(value=self.plot_types[0])
 
@@ -97,6 +124,7 @@ class PlotWindow:
         fig.show()
 
     def update_column_dropdown(self, event=None):
+        """Aktualisiert die Drop-down-Menüs mit den CSV-Spaltennamen."""
         plot_type = self.selected_plot.get()
 
         if plot_type == "Histogram":
@@ -109,10 +137,12 @@ class PlotWindow:
             self.col2_dropdown.config(values=self.df.columns.tolist() + ["---"])
 
     def plot_graph(self):
+        """Erstellt ein Diagramm basierend auf den Benutzereinstellungen."""
         plot_type = self.selected_plot.get()
         col1 = self.selected_col1.get()
         col2 = self.selected_col2.get()
 
+        # Erzeugung des Plots entsprechend dem gewählten Typ
         if plot_type == "Bar" and not (self.df[col1].dtype == 'object' and (self.df[col2].dtype == 'object' or col2 == "---")):
             messagebox.showwarning("Warning", "For Bar charts, both columns should be categorical!")
             return
@@ -156,23 +186,27 @@ class PlotWindow:
     def show_message(self):
         MessageBoxHandler(self.df)
 
-    def setup_styles():
-        style = ttk.Style()
-        style.configure("TLabel", font=("Arial", 12, "bold"), foreground="#1565c0", background="#e3f2fd")
-    
-        style.configure("Soft.TButton",
-                    padding=6,
-                    relief="flat",
-                    background="#a0c4ff",  # Soft mavi
-                    font=("Arial", 12, "bold"))
-
-        # Add hover effect for buttons
-        style.map("Soft.TButton",
-              foreground=[("active", "#ffffff")],
-              background=[("active", "#6a9aef")])  # Slightly darker blue when hovered
-
 
 class PlotHandler:
+    """
+    Eine Klasse zur Generierung verschiedener Diagrammtypen mit Plotly.
+
+    Attribute:
+    -----------
+    df : pandas.DataFrame
+        Der geladene DataFrame mit den CSV-Daten.
+    plot_type : str
+        Der gewählte Diagrammtyp (z. B. "bar", "pie", "histogram", "line", "box", "scatter").
+    col1 : str
+        Die erste ausgewählte Spalte für die Diagrammerstellung.
+    col2 : str
+        Die zweite ausgewählte Spalte (falls benötigt, sonst "---").
+
+    Methoden:
+    ---------
+    generate_plot():
+        Erstellt ein Diagramm basierend auf den ausgewählten Parametern und zeigt es an.
+    """
     def __init__(self, df, plot_type, col1, col2):
         self.df = df
         self.plot_type = plot_type
@@ -188,7 +222,7 @@ class PlotHandler:
             df_filtered = self.df
 
         if self.plot_type == "bar":
-            if self.col2 == "---":  # If no second column is selected
+            if self.col2 == "---":  # Wenn nicht zeite Spalte is ausgewält
                 count_df = self.df[self.col1].value_counts().reset_index(name="Count")
                 fig = px.bar(count_df, x="index", y="Count")
             else:
@@ -197,7 +231,7 @@ class PlotHandler:
             fig.update_layout(title=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
 
         elif self.plot_type == "pie":
-                if self.col1 == "salary":  # Ensuring we group by salary
+                if self.col1 == "salary":  # group by salary
                     fig = make_subplots(rows=1, cols=2, subplot_titles=("<=50K", ">50K"), specs=[[{"type": "domain"}, {"type": "domain"}]])
             
                 for i, salary_group in enumerate(["<=50K", ">50K"]):
@@ -231,7 +265,8 @@ class PlotHandler:
         else:
             messagebox.showerror("Error", "Invalid plot type selected!")
             return
-
+        
+        # Speichern und Öffnen des Diagramms
         fig.write_html("plot.html")
         webbrowser.open("plot.html")
 
