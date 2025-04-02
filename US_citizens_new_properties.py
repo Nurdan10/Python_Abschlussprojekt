@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import messagebox, ttk, filedialog
 import pandas as pd
 import plotly.express as px
 from plotly.subplots import make_subplots
@@ -28,7 +28,7 @@ class PlotWindow:
         self.df = pd.read_csv(csv_file)
         self.df["occupation"].replace("?", "Unknown", inplace=True)
         self.df["education_level"] = self.df["education"].apply(mapping_education)
-        self.current_fig = None
+
         self.create_layout()
 
     def create_layout(self):
@@ -69,29 +69,12 @@ class PlotWindow:
         
         self.show_grid = tk.BooleanVar()
         ttk.Checkbutton(self.nav_frame, text="Show Grid", variable=self.show_grid).pack(pady=5)
-
-         # Filter
-        ttk.Label(self.nav_frame, text="Filter by:", style="TLabel").pack(pady=5)
-        self.filter_column = tk.StringVar(value=self.all_columns[0])
-        self.filter_dropdown = ttk.Combobox(self.nav_frame, textvariable=self.filter_column, values=self.all_columns)
-        self.filter_dropdown.pack(pady=5)
-
-        self.filter_var = tk.StringVar(value="All")
-        self.filter_value_dropdown = ttk.Combobox(self.nav_frame, textvariable=self.filter_var, values=["All"])
-        self.filter_value_dropdown.pack(pady=5)
-        self.filter_column.trace_add("write", self.update_filter_values)
         
         self.info_button = ttk.Button(self.nav_frame, text="Info", style="Soft.TButton", command=self.show_message)
         self.info_button.pack(pady=5)
         
         self.quit_button = ttk.Button(self.nav_frame, text="Quit", style="Soft.TButton", command=self.root.quit)
         self.quit_button.pack(pady=5)
-
-    def update_filter_values(self, *args):
-        col = self.filter_column.get()
-        if col in self.df.columns:
-            unique_values = self.df[col].dropna().unique().tolist()
-            self.filter_value_dropdown.config(values=["All"] + unique_values)
 
     def plot_pie_chart(self):
         col1 = self.col1_var.get()
@@ -124,8 +107,6 @@ class PlotWindow:
         else:
             self.col1_dropdown.config(values=self.df.columns.tolist())
             self.col2_dropdown.config(values=self.df.columns.tolist() + ["---"])
-
-        self.plot_graph()    
 
     def plot_graph(self):
         plot_type = self.selected_plot.get()
@@ -198,10 +179,21 @@ class PlotHandler:
         self.col1 = col1
         self.col2 = col2
 
+    def ask_to_save(fig):
+        response = messagebox.askyesno("Kaydet", "Görselleştirmeyi kaydetmek ister misiniz?")
+        if response:
+            file_type = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png"), ("PDF files", "*.pdf")])
+            if file_type:
+                if file_type.endswith(".png"):
+                    fig.write_image(file_type)
+                elif file_type.endswith(".pdf"):
+                    fig.write_image(file_type, format="pdf")
+                messagebox.showinfo("Bilgi", f"Görselleştirme başarıyla kaydedildi: {file_type}")
+
     def generate_plot(self):
         plot_title = f"{self.plot_type} plot of {self.col1} and {self.col2}".title()
         title_style = dict(font=dict(size=20, color="blue", family="Arial", weight="bold"))
-
+        fig = go.Figure()
         if self.plot_type == "bar":
             if self.col2 == "---":  # If no second column is selected
                 count_df = self.df[self.col1].value_counts().reset_index(name="Count")
@@ -212,19 +204,20 @@ class PlotHandler:
             fig.update_layout(title=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
 
         elif self.plot_type == "pie":
-                if self.col1 == "salary":  # Ensuring we group by salary
-                    fig = make_subplots(rows=1, cols=2, subplot_titles=("<=50K", ">50K"), specs=[[{"type": "domain"}, {"type": "domain"}]])
+            if self.col1 == "salary":  # Ensuring we group by salary
+                fig = make_subplots(rows=1, cols=2, subplot_titles=("<=50K", ">50K"), specs=[[{"type": "domain"}, {"type": "domain"}]])
             
-                for i, salary_group in enumerate(["<=50K", ">50K"]):
-                    df_grouped = self.df[self.df["salary"] == salary_group][self.col2].value_counts().reset_index()
-                    df_grouped.columns = [self.col2, "Count"]
-                    fig.add_trace(go.Pie(labels=df_grouped[self.col2], values=df_grouped["Count"]), row=1, col=i+1)
-                    fig.update_layout(title_text=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
-                else:
-                    count_df = self.df.groupby([self.col1, self.col2]).size().reset_index(name="Count")
-                    fig = px.pie(count_df, names=self.col1, color=self.col2, values="Count")
-                    fig.update_layout(title=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
-                    fig.show()
+            for i, salary_group in enumerate(["<=50K", ">50K"]):
+                df_grouped = self.df[self.df["salary"] == salary_group][self.col2].value_counts().reset_index()
+                df_grouped.columns = [self.col2, "Count"]
+                fig.add_trace(go.Pie(labels=df_grouped[self.col2], values=df_grouped["Count"]), row=1, col=i+1)
+                fig.update_layout(title_text=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
+                fig.show()
+            else:
+                count_df = self.df.groupby([self.col1, self.col2]).size().reset_index(name="Count")
+                fig = px.pie(count_df, names=self.col1, color=self.col2, values="Count")
+                fig.update_layout(title=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
+                fig.show()
 
         elif self.plot_type == "histogram":
             fig = px.histogram(self.df, x=self.col1, color=self.col2 if self.col2 != "---" else None)
@@ -246,31 +239,10 @@ class PlotHandler:
             messagebox.showerror("Error", "Invalid plot type selected!")
             return
 
-        self.current_fig = fig
         fig.write_html("plot.html")
         webbrowser.open("plot.html")
-        self.ask_to_save()
-
-def ask_to_save(self):
-        answer = messagebox.askyesno("Save Plot", "Do you want to save the plot?")
-        if answer:
-            self.ask_format()
-
-def ask_format(self):
-    format_choice = messagebox.askquestion("Select Format", "Save as PNG (Yes) or PDF (No)?")
-    if format_choice == 'yes':
-        self.save_plot("png")
-    else:
-        self.save_plot("pdf")
-
-def save_plot(self, format="png"):
-    if hasattr(self, 'current_fig'):
-        file_name = f"plot.{format}"
-        self.current_fig.write_image(file_name)
-        messagebox.showinfo("Saved", f"Plot saved as {file_name}!")
-    else:
-        messagebox.showwarning("Warning", "No plot to save! Generate a plot first.") 
-
+        
+        self.ask_to_save(fig)
 
 class MessageBoxHandler:
     def __init__(self, df):
