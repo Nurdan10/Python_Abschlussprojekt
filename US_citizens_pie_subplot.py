@@ -91,6 +91,12 @@ class PlotWindow:
         col1 = self.selected_col1.get()
         col2 = self.selected_col2.get()
 
+        if plot_type == "Pie Subplots":
+            self.plot_pie_subplots(col1, col2)
+            return
+
+        fig = None
+
         if plot_type == "Bar" and not (self.df[col1].dtype == 'object' and (self.df[col2].dtype == 'object' or col2 == "---")):
             messagebox.showwarning("Warning", "For Bar charts, both columns should be categorical!")
             return
@@ -110,8 +116,8 @@ class PlotWindow:
             messagebox.showwarning("Warning", "For Box plots, the second column should be numerical!")
             return
 
-        if self.df[col1].nunique() > 50 and plot_type in ["Bar", "Pie"]:
-            messagebox.showwarning("Warning", "The selected plot type may not be suitable due to too many unique values!")
+        #if self.df[col1].nunique() > 50 and plot_type in ["Bar", "Pie"]:
+            #messagebox.showwarning("Warning", "The selected plot type may not be suitable due to too many unique values!")
 
         if plot_type == "Bar":
             self.plot_handler = PlotHandler(self.df, "bar", col1, col2)
@@ -128,8 +134,28 @@ class PlotWindow:
         else:
             messagebox.showerror("Error", "Invalid plot type selected!")
             return
+        
+        if fig:
+            fig.write_html("plot.html")
+            webbrowser.open("plot.html")
 
         self.plot_handler.generate_plot()
+
+    def plot_pie_subplots(self, col1, col2):
+        """Generates Pie Subplots."""
+        unique_values = self.df[col1].unique()
+        num_plots = min(len(unique_values), 6)
+        
+        fig = make_subplots(rows=1, cols=num_plots, subplot_titles=[str(val) for val in unique_values[:num_plots]], specs=[[{'type':'domain'}]*num_plots])
+        
+        for i, value in enumerate(unique_values[:num_plots]):
+            subset = self.df[self.df[col1] == value][col2].value_counts(normalize=True)
+            fig.add_trace(go.Pie(labels=subset.index, values=subset.values, name=str(value)), row=1, col=i+1)
+        
+        fig.update_layout(title_text=f"Pie Subplots of {col1}")
+        fig.write_html("plot.html")
+        webbrowser.open("plot.html")
+
 
     def show_message(self):
         MessageBoxHandler(self.df)
@@ -170,14 +196,20 @@ class PlotHandler:
                 fig = px.bar(count_df, x=self.col1, y="Count", color=self.col2, barmode="group")
             fig.update_layout(title=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
 
-        elif self.plot_type == "pie":
-            if self.col2 == "---":  # If no second column is selected
-                count_df = self.df[self.col1].value_counts().reset_index(name="Count")
-                fig = px.pie(count_df, names="index", values="Count")
-            else:
-                count_df = self.df.groupby([self.col1, self.col2]).size().reset_index(name="Count")
-                fig = px.pie(count_df, names=self.col1, color=self.col2, values="Count")
-            fig.update_layout(title=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
+        elif self.plot_type == "pie_subplots":
+            unique_values = self.df[self.col1].unique()
+            num_plots = min(len(unique_values), 6)  # En fazla 6 subplot olacak şekilde sınırlandırıyoruz.
+            
+            fig = make_subplots(rows=1, cols=num_plots, subplot_titles=[str(val) for val in unique_values[:num_plots]], specs=[[{'type':'domain'}]*num_plots])
+            
+            for i, value in enumerate(unique_values[:num_plots]):
+                subset = self.df[self.df[self.col1] == value][self.col2].value_counts(normalize=True)
+                fig.add_trace(go.Pie(labels=subset.index, values=subset.values, name=str(value)), row=1, col=i+1)
+            
+            fig.update_layout(title_text=plot_title,title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
+            fig.write_html("plot.html")
+            webbrowser.open("plot.html")
+            return
 
         elif self.plot_type == "histogram":
             fig = px.histogram(self.df, x=self.col1, color=self.col2 if self.col2 != "---" else None)
