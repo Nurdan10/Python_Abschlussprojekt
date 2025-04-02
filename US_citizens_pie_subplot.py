@@ -94,9 +94,6 @@ class PlotWindow:
         self.plot_button = ttk.Button(self.nav_frame, text="Plot", style="Soft.TButton", command=self.plot_graph)
         self.plot_button.pack(pady=5)
         
-        self.show_grid = tk.BooleanVar()
-        ttk.Checkbutton(self.nav_frame, text="Show Grid", variable=self.show_grid).pack(pady=5)
-        
         self.info_button = ttk.Button(self.nav_frame, text="Info", style="Soft.TButton", command=self.show_message)
         self.info_button.pack(pady=5)
         
@@ -216,10 +213,6 @@ class PlotHandler:
     def generate_plot(self):
         plot_title = f"{self.plot_type} plot of {self.col1} and {self.col2}".title()
         title_style = dict(font=dict(size=20, color="blue", family="Arial", weight="bold"))
-        if hasattr(self, 'filter_var') and self.filter_var.get() != "All":
-            df_filtered = self.df[self.df[self.filter_column.get()] == self.filter_var.get()]
-        else:
-            df_filtered = self.df
 
         if self.plot_type == "bar":
             if self.col2 == "---":  # Wenn nicht zeite Spalte is ausgewält
