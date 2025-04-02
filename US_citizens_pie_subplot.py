@@ -19,7 +19,7 @@ Datum: [Aktuelles Datum]
 """
 
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import messagebox, ttk, filedialog, simpledialog
 import pandas as pd
 import plotly.express as px
 from plotly.subplots import make_subplots
@@ -262,6 +262,17 @@ class PlotHandler:
         # Speichern und Öffnen des Diagramms
         fig.write_html("plot.html")
         webbrowser.open("plot.html")
+
+        # Speicherung des Plots
+        save_plot = messagebox.askyesno("Save Plot", "Do you want to save this plot?")
+        
+        if save_plot:
+            filetypes = [("PNG file", "*.png"), ("PDF file", "*.pdf")]
+            file_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=filetypes)
+            
+            if file_path:
+                fig.write_image(file_path)
+                messagebox.showinfo("Success", f"Plot saved as {file_path}")
 
 
 class MessageBoxHandler:
