@@ -20,6 +20,8 @@ Datum: [Aktuelles Datum]
 
 
 import tkinter as tk
+from tkinter import Label
+from PIL import Image, ImageTk, ImageDraw, ImageFont
 from tkinter import messagebox, ttk, filedialog, simpledialog
 import pandas as pd
 import plotly.express as px
@@ -75,7 +77,43 @@ class PlotWindow:
         # Visualisierungsbereich
         self.vis_frame = tk.Frame(self.pane, width=600, bg="white")
         self.pane.add(self.vis_frame)
+
+        self.add_image_with_text()
         
+
+    def add_image_with_text(self):
+        """Resmin üzerine uygulama adı veya mesaj ekleyerek ekrana getirir."""
+        img_path = "your_image_path.jpg"  # Resmin yolunu buraya yazın
+        img = Image.open(img_path)
+        img = img.resize((600, 400), Image.ANTIALIAS)
+        
+        # Üzerine yazı eklemek için çizim başlat
+        draw = ImageDraw.Draw(img)
+
+        # Yazı tipi ayarla (Varsayılan font kullanabiliriz)
+        try:
+            font = ImageFont.truetype("arial.ttf", 40)  # Sisteminizde Arial yoksa farklı bir font kullanın
+        except:
+            font = ImageFont.load_default()
+
+        text = "Welcome to DataViz App"  # Buraya istediğiniz metni yazabilirsiniz
+        text_width, text_height = draw.textsize(text, font=font)
+
+        # Yazıyı merkeze yerleştir
+        text_x = (img.width - text_width) // 2
+        text_y = 20  # Üstten biraz boşluk bırak
+
+        # Yazıyı çiz (Beyaz arka plan, siyah font)
+        draw.text((text_x, text_y), text, font=font, fill="white")
+
+        # Tkinter ile göstermek için dönüştür
+        img_tk = ImageTk.PhotoImage(img)
+        
+        # Resmi bir Label içinde göster
+        self.image_label = Label(self.vis_frame, image=img_tk)
+        self.image_label.image = img_tk  # Referansı kaybetmemek için
+        self.image_label.pack(padx=10, pady=10)
+
         self.create_widgets()
 
     def create_widgets(self):
@@ -283,7 +321,7 @@ class PlotHandler:
             if file_path:
                 fig.write_image(file_path)
                 messagebox.showinfo("Success", f"Plot saved as {file_path}")
-                
+
         """save_plot = messagebox.askyesno("Save Plot", "Do you want to save this plot?")
         
         if save_plot:
