@@ -277,6 +277,16 @@ class PlotHandler:
         save_plot = messagebox.askyesno("Save Plot", "Do you want to save this plot?")
         
         if save_plot:
+            filetypes = [("PNG file", "*.png"), ("PDF file", "*.pdf")]
+            file_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=filetypes)
+            
+            if file_path:
+                fig.write_image(file_path)
+                messagebox.showinfo("Success", f"Plot saved as {file_path}")
+                
+        """save_plot = messagebox.askyesno("Save Plot", "Do you want to save this plot?")
+        
+        if save_plot:
             # Kaydetme penceresini aç
             filetypes = [("PNG file", "*.png"), ("PDF file", "*.pdf")]
             file_path = filedialog.asksaveasfilename(
@@ -294,7 +304,7 @@ class PlotHandler:
                 except Exception as e:
                     messagebox.showerror("Error", f"Failed to save plot: {e}")
         else:
-            messagebox.showwarning("Warning", "No directory selected. Plot not saved.")
+            messagebox.showwarning("Warning", "No directory selected. Plot not saved.")"""
 
 
 class MessageBoxHandler:
