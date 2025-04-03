@@ -18,10 +18,12 @@ Autor: [Dein Name]
 Datum: [Aktuelles Datum]
 """
 
+
 import tkinter as tk
 from tkinter import messagebox, ttk, filedialog, simpledialog
 import pandas as pd
 import plotly.express as px
+import plotly.io as pio
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import webbrowser
@@ -35,6 +37,12 @@ def mapping_education(x):
     elif x in ["Bachelors", "Masters", "Prof-school", "Doctorate"]:
         return "high_level_grade"
     return None
+
+def mapping_marital_status(x):
+    if x in ["Never-married", "Divorced", "Separated", "Widowed"]:
+        return "unmarried"
+    elif x in ["Married-civ-spouse", "Married-AF-spouse", "Married-spouse-absent"]:
+        return "married"
 
 def setup_styles():
     """Konfiguriert das visuelle Erscheinungsbild der GUI mit Tkinter Style."""
@@ -51,6 +59,7 @@ class PlotWindow:
         self.df = pd.read_csv(csv_file)
         self.df["occupation"].replace("?", "Unknown", inplace=True)
         self.df["education_level"] = self.df["education"].apply(mapping_education)
+        self.df["marital_status_summary"] = self.df["marital-status"].apply(mapping_marital_status)
 
         self.create_layout()
 
@@ -100,7 +109,7 @@ class PlotWindow:
         self.quit_button = ttk.Button(self.nav_frame, text="Quit", style="Soft.TButton", command=self.root.quit)
         self.quit_button.pack(pady=5)
 
-    def plot_pie_chart(self):
+    """def plot_pie_chart(self):
         col1 = self.col1_var.get()
         col2 = self.col2_var.get()
         
@@ -118,7 +127,7 @@ class PlotWindow:
             fig.add_trace(go.Pie(labels=subset.index, values=subset.values, name=str(value)), row=1, col=i+1)
         
         fig.update_layout(title_text=f"Pie Chart Subplots of {col1} by {col2}")
-        fig.show()
+        fig.show()"""
 
     def update_column_dropdown(self, event=None):
         """Aktualisiert die Drop-down-Menüs mit den CSV-Spaltennamen."""
@@ -224,20 +233,21 @@ class PlotHandler:
             fig.update_layout(title=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
 
         elif self.plot_type == "pie":
-                if self.col1 == "salary":  # group by salary
-                    fig = make_subplots(rows=1, cols=2, subplot_titles=("<=50K", ">50K"), specs=[[{"type": "domain"}, {"type": "domain"}]])
+            # We handle only the subplot version of the pie chart
+            if self.col1 == "salary":  # group by salary
+                fig = make_subplots(rows=1, cols=2, subplot_titles=("<=50K", ">50K"), specs=[[{"type": "domain"}, {"type": "domain"}]])
             
                 for i, salary_group in enumerate(["<=50K", ">50K"]):
                     df_grouped = self.df[self.df["salary"] == salary_group][self.col2].value_counts().reset_index()
                     df_grouped.columns = [self.col2, "Count"]
                     fig.add_trace(go.Pie(labels=df_grouped[self.col2], values=df_grouped["Count"]), row=1, col=i+1)
-                    fig.update_layout(title_text=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
-                    fig.show()
-                else:
-                    count_df = self.df.groupby([self.col1, self.col2]).size().reset_index(name="Count")
-                    fig = px.pie(count_df, names=self.col1, color=self.col2, values="Count")
-                    fig.update_layout(title=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
-                    fig.show()
+                fig.update_layout(title_text=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
+                fig.show()
+            else:
+                count_df = self.df.groupby([self.col1, self.col2]).size().reset_index(name="Count")
+                fig = px.pie(count_df, names=self.col1, color=self.col2, values="Count")
+                fig.update_layout(title=plot_title, title_font=dict(size=20, color="blue", family="Arial", weight="bold"))
+                fig.show()
 
         elif self.plot_type == "histogram":
             fig = px.histogram(self.df, x=self.col1, color=self.col2 if self.col2 != "---" else None)
@@ -267,12 +277,24 @@ class PlotHandler:
         save_plot = messagebox.askyesno("Save Plot", "Do you want to save this plot?")
         
         if save_plot:
+            # Kaydetme penceresini aç
             filetypes = [("PNG file", "*.png"), ("PDF file", "*.pdf")]
-            file_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=filetypes)
-            
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".png", filetypes=filetypes, title="Save Plot As"
+            )
+
             if file_path:
-                fig.write_image(file_path)
-                messagebox.showinfo("Success", f"Plot saved as {file_path}")
+                try:
+                    # Grafiği PNG veya PDF olarak kaydet
+                    # fig.io.to_image ile görseli kaydediyoruz
+                    img_data = pio.to_image(fig, format='png')  # PNG formatında döndürüyoruz
+                    with open(file_path, "wb") as f:
+                        f.write(img_data)
+                    messagebox.showinfo("Success", f"Plot saved successfully at:\n{file_path}")
+                except Exception as e:
+                    messagebox.showerror("Error", f"Failed to save plot: {e}")
+        else:
+            messagebox.showwarning("Warning", "No directory selected. Plot not saved.")
 
 
 class MessageBoxHandler:
