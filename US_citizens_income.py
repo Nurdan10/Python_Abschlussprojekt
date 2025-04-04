@@ -380,7 +380,7 @@ class PlotHandler:
         """save_plot = messagebox.askyesno("Save Plot", "Do you want to save this plot?")
         
         if save_plot:
-            # Kaydetme penceresini aç
+            #öffne das Fenster der Speicherung
             filetypes = [("PNG file", "*.png"), ("PDF file", "*.pdf")]
             file_path = filedialog.asksaveasfilename(
                 defaultextension=".png", filetypes=filetypes, title="Save Plot As"
@@ -388,9 +388,9 @@ class PlotHandler:
 
             if file_path:
                 try:
-                    # Grafiği PNG veya PDF olarak kaydet
-                    # fig.io.to_image ile görseli kaydediyoruz
-                    img_data = pio.to_image(fig, format='png')  # PNG formatında döndürüyoruz
+                    # Sspeichern es als PNG oder PDF
+                    # fig.io.to_image # Plot speichern
+                    img_data = pio.to_image(fig, format='png')  # konvertiert PNG Format
                     with open(file_path, "wb") as f:
                         f.write(img_data)
                     messagebox.showinfo("Success", f"Plot saved successfully at:\n{file_path}")
