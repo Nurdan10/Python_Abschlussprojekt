@@ -1,0 +1,4 @@
+tk
+pillow
+pandas
+plotly
